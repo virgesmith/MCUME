@@ -8,4 +8,4 @@ code_file = f"MCUME_pico/picospeccy/{name}.inl"
 with open(rom_file, "rb") as ifd, open(code_file, "w") as ofd:
   rom = [str(b) for b in ifd.read()]
   #print(int.from_bytes(rom[0], "little"))
-  ofd.write(f"unsigned char {name}[] = {{{','.join(rom)}}};\n")
+  ofd.write(f"const unsigned char {name}[] = {{{','.join(rom)}}};\n")

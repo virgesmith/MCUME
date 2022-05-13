@@ -6,8 +6,12 @@
 #include "AY8910.h"
 
 
-#define WIDTH  320
-#define HEIGHT 192
+static const int WIDTH  = 320;
+static const int HEIGHT = 240;
+
+static const int VBORDER = (HEIGHT - 192) / 2; // TFT is 320x240
+static const int HBORDER = (WIDTH - 256) / 2; // ZXSpectrums is 256x192
+
 
 #define CYCLES_PER_FRAME 69888 //3500000/50
 
@@ -85,9 +89,7 @@ static byte key_ram[8]={
 byte out_ram;                            // Output (fe port)
 static byte kempston_ram;                       // Kempston-Joystick Buffer
 
-static int v_border=0;
-static int h_border=32;
-static int bordercolor=0;
+static int bordercolor=5;
 static byte * XBuf=0;
 
 static int ik;
@@ -102,15 +104,26 @@ void displayscanline(int y, int f_flash)
 {
   int x, row, col, dir_p, dir_a, pixeles, tinta, papel, atributos;
 
-  row = y + v_border;    // 4 & 32 = graphical screen offset
-  col = 0;              // 32+256+32=320  4+192+4=200  (res=320x200)
+  col = 0;
 
-  for (x = 0; x < h_border; x++) {
+  if (y < VBORDER || y >= HEIGHT - VBORDER)
+  {
+    for (x = 0; x < WIDTH; x++) {
+      XBuf[col++] = bordercolor;
+    }
+    emu_DrawLine(XBuf, WIDTH, HEIGHT, y);
+    return;
+  }           // 32+256+32=320  4+192+4=200  (res=320x200)
+
+  for (x = 0; x < HBORDER; x++) {
     XBuf[col++] = bordercolor;
   }
 
-  dir_p = ((y & 0xC0) << 5) + ((y & 0x07) << 8) + ((y & 0x38) << 2);
-  dir_a = 0x1800 + (32 * (y >> 3));
+  //y -= VBORDER;
+  row = y - VBORDER;
+
+  dir_p = ((row & 0xC0) << 5) + ((row & 0x07) << 8) + ((row & 0x38) << 2);
+  dir_a = 0x1800 + (32 * (row >> 3));
 
   for (x = 0; x < 32; x++)
   {
@@ -137,7 +150,7 @@ void displayscanline(int y, int f_flash)
     XBuf[col++] = ((pixeles & 0x01) ? tinta : papel);
   }
 
-  for (x = 0; x < h_border; x++) {
+  for (x = 0; x < HBORDER; x++) {
     XBuf[col++] = bordercolor;
   }
 
@@ -247,8 +260,8 @@ void emu_KeyboardOnUp(int keymodifer, int key) {
 void spec_Start(char * filename) {
 
   if (!filename) {
-    #include "zxspectrum48rom.inl" // defines
-    ZX_ReadFromFlash_Z80(&myCPU, zxspectrum48rom, sizeof(zxspectrum48_rom) / sizeof(unsigned char));
+    #include "zxspectrum48rom.inl" // defines zxspectrum48rom
+    ZX_ReadFromFlash_Z80(&myCPU, zxspectrum48rom, sizeof(zxspectrum48rom) / sizeof(unsigned char));
   }
 
   memset(Z80_RAM, 0, 0xC000);
@@ -384,7 +397,7 @@ void OutZ80(register word Port,register byte Value)
     WrData8910(&ay,Value);
   }
   else if (!(Port & 0x01)) {
-    bordercolor = (Value & 0x07);
+    //bordercolor = (Value & 0x07);
     byte mic = (Value & 0x08);
     byte ear = (Value & 0x10);
     buzz(((ear)?1:0), CYCLES_PER_STEP-myCPU.ICount);

@@ -2,3 +2,4 @@ build
 pico-sdk*
 spectrum-roms*
 *.inl
+.vscode
