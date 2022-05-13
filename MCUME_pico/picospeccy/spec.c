@@ -5,12 +5,17 @@
 
 #include "AY8910.h"
 
+#include <string.h>
 
-static const int WIDTH  = 320;
-static const int HEIGHT = 240;
+// ZXSpectrum is 256x192
+static const int DISP_WIDTH = 256;
+static const int DISP_HEIGHT = 192;
+// TFT is 320x240
+static const int SCREEN_WIDTH  = 320;
+static const int SCREEN_HEIGHT = 240;
 
-static const int VBORDER = (HEIGHT - 192) / 2; // TFT is 320x240
-static const int HBORDER = (WIDTH - 256) / 2; // ZXSpectrums is 256x192
+static const int HBORDER = (SCREEN_WIDTH - DISP_WIDTH) / 2; // ZXSpectrums is 256x192
+static const int VBORDER = (SCREEN_HEIGHT - DISP_HEIGHT) / 2;
 
 
 #define CYCLES_PER_FRAME 69888 //3500000/50
@@ -89,8 +94,8 @@ static byte key_ram[8]={
 byte out_ram;                            // Output (fe port)
 static byte kempston_ram;                       // Kempston-Joystick Buffer
 
-static int bordercolor=5;
-static byte * XBuf=0;
+static int bordercolor = 5;
+static byte* scanline_buffer = NULL;
 
 static int ik;
 static int ihk;
@@ -98,34 +103,29 @@ static int ihk;
 void spec_Input(int bClick) {
   ik  = emu_GetPad();
   ihk = emu_ReadI2CKeyboard();
+  // TODO picodisplay buttons?....
 }
 
 void displayscanline(int y, int f_flash)
 {
-  int x, row, col, dir_p, dir_a, pixeles, tinta, papel, atributos;
+  int col = 0, pixeles, tinta, papel, atributos;
 
-  col = 0;
-
-  if (y < VBORDER || y >= HEIGHT - VBORDER)
+  if (y < VBORDER || y >= SCREEN_HEIGHT - VBORDER)
   {
-    for (x = 0; x < WIDTH; x++) {
-      XBuf[col++] = bordercolor;
-    }
-    emu_DrawLine(XBuf, WIDTH, HEIGHT, y);
+    memset(scanline_buffer, bordercolor, SCREEN_WIDTH);
+    emu_DrawLine(scanline_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, y);
     return;
   }           // 32+256+32=320  4+192+4=200  (res=320x200)
 
-  for (x = 0; x < HBORDER; x++) {
-    XBuf[col++] = bordercolor;
-  }
+  memset(scanline_buffer, bordercolor, HBORDER);
+  col += HBORDER;
 
-  //y -= VBORDER;
-  row = y - VBORDER;
+  int row = y - VBORDER;
 
-  dir_p = ((row & 0xC0) << 5) + ((row & 0x07) << 8) + ((row & 0x38) << 2);
-  dir_a = 0x1800 + (32 * (row >> 3));
+  int dir_p = ((row & 0xC0) << 5) + ((row & 0x07) << 8) + ((row & 0x38) << 2);
+  int dir_a = 0x1800 + (32 * (row >> 3));
 
-  for (x = 0; x < 32; x++)
+  for (int x = 0; x < 32; x++)
   {
     pixeles=  VRAM[dir_p++];
     atributos=VRAM[dir_a++];
@@ -140,22 +140,37 @@ void displayscanline(int y, int f_flash)
       papel = (atributos & 0x07) + ((atributos & 0x40) >> 3);
       tinta = (atributos & 0x78) >> 3;
     }
-    XBuf[col++] = ((pixeles & 0x80) ? tinta : papel);
-    XBuf[col++] = ((pixeles & 0x40) ? tinta : papel);
-    XBuf[col++] = ((pixeles & 0x20) ? tinta : papel);
-    XBuf[col++] = ((pixeles & 0x10) ? tinta : papel);
-    XBuf[col++] = ((pixeles & 0x08) ? tinta : papel);
-    XBuf[col++] = ((pixeles & 0x04) ? tinta : papel);
-    XBuf[col++] = ((pixeles & 0x02) ? tinta : papel);
-    XBuf[col++] = ((pixeles & 0x01) ? tinta : papel);
+    scanline_buffer[col++] = ((pixeles & 0x80) ? tinta : papel);
+    scanline_buffer[col++] = ((pixeles & 0x40) ? tinta : papel);
+    scanline_buffer[col++] = ((pixeles & 0x20) ? tinta : papel);
+    scanline_buffer[col++] = ((pixeles & 0x10) ? tinta : papel);
+    scanline_buffer[col++] = ((pixeles & 0x08) ? tinta : papel);
+    scanline_buffer[col++] = ((pixeles & 0x04) ? tinta : papel);
+    scanline_buffer[col++] = ((pixeles & 0x02) ? tinta : papel);
+    scanline_buffer[col++] = ((pixeles & 0x01) ? tinta : papel);
   }
 
-  for (x = 0; x < HBORDER; x++) {
-    XBuf[col++] = bordercolor;
-  }
+  memset(scanline_buffer + col, bordercolor, HBORDER);
 
-  emu_DrawLine(XBuf, WIDTH, HEIGHT, y);
+  emu_DrawLine(scanline_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, y);
 }
+
+
+static void displayScreen(void) {
+  int y;
+  static int f_flash = 1, f_flash2 = 0;
+  f_flash2 = (f_flash2++) % 32;
+  if (f_flash2 < 16)
+    f_flash = 1;
+  else
+    f_flash = 0;
+
+  for (y = 0; y < SCREEN_HEIGHT; y++)
+    displayscanline (y, f_flash);
+
+  emu_DrawVsync();
+}
+
 
 #ifdef HAS_SND
 #ifdef CUSTOM_SND
@@ -185,22 +200,6 @@ void  SND_Process( short * stream, int len )
 }
 #endif
 #endif
-
-static void displayScreen(void) {
-  int y;
-  static int f_flash = 1, f_flash2 = 0;
-  f_flash2 = (f_flash2++) % 32;
-  if (f_flash2 < 16)
-    f_flash = 1;
-  else
-    f_flash = 0;
-
-  for (y = 0; y < HEIGHT; y++)
-    displayscanline (y, f_flash);
-
-  emu_DrawVsync();
-}
-
 
 
 static void InitKeyboard(void){
@@ -294,7 +293,7 @@ void spec_Init(void) {
   Reset8910(&ay,3500000,0);
 
 
-  if (XBuf == 0) XBuf = (byte *)emu_Malloc(WIDTH);
+  if (scanline_buffer == NULL) scanline_buffer = (byte *)emu_Malloc(SCREEN_WIDTH);
   VRAM = Z80_RAM;
   memset(Z80_RAM, 0, sizeof(Z80_RAM));
 
