@@ -62,7 +62,7 @@ int main(void) {
     tft.fillScreenNoDma( RGBVAL16(0x00,0x00,0x00) );
     tft.startDMA();
     struct repeating_timer timer;
-    add_repeating_timer_ms(5, repeating_timer_callback, NULL, &timer);
+    add_repeating_timer_ms(25, repeating_timer_callback, NULL, &timer);
 
     while (true) {
         if (menuActive()) {

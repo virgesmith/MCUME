@@ -46,9 +46,9 @@
 const unsigned short key_map1[] = {
   20,26,8,21,23,28,24,12,18,19,39+128,
   0, 4, 22, 7,9, 10,11,13,14,15,40,
-  0,29,27,6,25,5,17,16,16+64,44, 
+  0,29,27,6,25,5,17,16,16+64,44,
   0,0,0,0   //up,left,right,down
-  };  
+  };
 
 #define keylables_map2_0 (char *)"1234567890="
 #define keylables_map2_1 (char *)" !@#$%+&*- "
@@ -58,7 +58,7 @@ const unsigned short key_map2[] = {
   0,30+64,31+64,32+64,33+64,34+64,14+64,35+64,5+64,13+64,0,
   0, 37+64,38+64,6+64,25+64,19+64,21+64,23+64,17+64,29+64,
   36+128,34+128,37+128,35+128   //up,left,right,down
-  };  
+  };
 
 #define keylables_map3_0 (char *)"QWERTYUIOP "
 #define keylables_map3_1 (char *)" ASDFGHJKL "
@@ -126,9 +126,9 @@ extern void * emu_LineBuffer(int line);
 #define RGBVAL32(r,g,b)  ( (r<<16) | (g<<8) | b )
 #define RGBVAL16(r,g,b)  ( (((r>>3)&0x1f)<<11) | (((g>>2)&0x3f)<<5) | (((b>>3)&0x1f)<<0) )
 #define RGBVAL8(r,g,b)   ( (((r>>5)&0x07)<<5) | (((g>>5)&0x07)<<2) | (((b>>6)&0x3)<<0) )
-#define R16(rgb) ((rgb>>8)&0xf8) 
-#define G16(rgb) ((rgb>>3)&0xfc) 
-#define B16(rgb) ((rgb<<3)&0xf8) 
+#define R16(rgb) ((rgb>>8)&0xf8)
+#define G16(rgb) ((rgb>>3)&0xfc)
+#define B16(rgb) ((rgb<<3)&0xf8)
 extern void emu_drawText(unsigned short x, unsigned short y, const char * text, unsigned short fgcolor, unsigned short bgcolor, int doublesize);
 
 extern void emu_InitJoysticks(void);
@@ -142,6 +142,8 @@ extern int emu_ReadI2CKeyboard(void);
 extern void emu_KeyboardOnUp(int keymodifer, int key);
 extern void emu_KeyboardOnDown(int keymodifer, int key);
 
+extern unsigned char emu_ReadUsbSerial(void);
+
 extern void emu_sndPlaySound(int chan, int volume, int freq);
 extern void emu_sndPlayBuzz(int size, int val);
 extern void emu_sndInit();
@@ -150,9 +152,9 @@ extern int emu_us(void);
 
 extern int emu_setKeymap(int index);
 
-extern void emu_FileTempInit(void); 
-extern void emu_FileTempRead(int addr, unsigned char * val, int n); 
-extern void emu_FileTempWrite(int addr, unsigned char val); 
+extern void emu_FileTempInit(void);
+extern void emu_FileTempRead(int addr, unsigned char * val, int n);
+extern void emu_FileTempWrite(int addr, unsigned char val);
 extern void emu_printh(int val);
 
 #endif

@@ -94,7 +94,7 @@ static byte key_ram[8]={
 byte out_ram;                            // Output (fe port)
 static byte kempston_ram;                       // Kempston-Joystick Buffer
 
-static int bordercolor = 5;
+static int bordercolor = 0;
 static byte* scanline_buffer = NULL;
 
 static int ik;
@@ -102,8 +102,9 @@ static int ihk;
 
 void spec_Input(int bClick) {
   ik  = emu_GetPad();
-  ihk = emu_ReadI2CKeyboard();
-  // TODO picodisplay buttons?....
+  //ihk = emu_ReadI2CKeyboard();
+  ihk = emu_ReadUsbSerial();
+
 }
 
 void displayscanline(int y, int f_flash)
@@ -396,7 +397,7 @@ void OutZ80(register word Port,register byte Value)
     WrData8910(&ay,Value);
   }
   else if (!(Port & 0x01)) {
-    //bordercolor = (Value & 0x07);
+    bordercolor = (Value & 0x07);
     byte mic = (Value & 0x08);
     byte ear = (Value & 0x10);
     buzz(((ear)?1:0), CYCLES_PER_STEP-myCPU.ICount);
