@@ -760,61 +760,64 @@ unsigned char emu_ReadI2CKeyboard2(int row) {
 
 
 unsigned char emu_ReadUsbSerial(void) {
-
-  const char UPPER = 128;
-  int mapping[] = {20,26,8,21,23,28,24,12,18,19,39};
+  // mapping handled on client side now
   unsigned char c = getchar_timeout_us(0);
-  if (c != 255) printf("%c %d\n", c, c);
-  switch (c)
-  {
-    case '1': return 30;
-    case '2': return 31;
-    case '3': return 32;
-    case '4': return 33;
-    case '5': return 34;
-    case '6': return 35;
-    case '7': return 36;
-    case '8': return 37;
-    case '9': return 38;
-    case '0': return 39;
-    case ')': return 39 + UPPER; // delete
+  if (c == 255)
+    c = 0;
+  return c;
 
-    case 'q': return 20;
-    case 'Q': return 20 + UPPER;
-    case 'w': return 26;
-    case 'e': return 8;
-    case 'r': return 21;
-    case 't': return 23;
-    case 'y': return 28;
-    case 'u': return 24;
-    case 'i': return 12;
-    case 'o': return 18;
-    case 'p': return 19;
+  // const char UPPER = 128;
+  // if (c != 255) printf("%c %d\n", c, c);
+  // switch (c)
+  // {
+  //   case '1': return 30;
+  //   case '2': return 31;
+  //   case '3': return 32;
+  //   case '4': return 33;
+  //   case '5': return 34;
+  //   case '6': return 35;
+  //   case '7': return 36;
+  //   case '8': return 37;
+  //   case '9': return 38;
+  //   case '0': return 39;
+  //   case ')': return 39 + UPPER; // delete
 
-    case 'a': return 4;
-    case 's': return 22;
-    case 'd': return 7;
-    case 'f': return 9;
-    case 'g': return 10;
-    case 'h': return 11;
-    case 'j': return 13;
-    case 'k': return 14;
-    case 'l': return 15;
-    case '#': return 40;
+  //   case 'q': return 20;
+  //   case 'Q': return 20 + UPPER;
+  //   case 'w': return 26;
+  //   case 'e': return 8;
+  //   case 'r': return 21;
+  //   case 't': return 23;
+  //   case 'y': return 28;
+  //   case 'u': return 24;
+  //   case 'i': return 12;
+  //   case 'o': return 18;
+  //   case 'p': return 19;
 
-    //case '?': return 224; caps shift
-    case 'z': return 29;
-    case 'x': return 27;
-    case 'c': return 6;
-    case 'v': return 25;
-    case 'b': return 5;
-    case 'n': return 17;
-    case 'm': return 16;
-    //case ' ': return 225; symbol shift
-    case ' ': return 44;
+  //   case 'a': return 4;
+  //   case 's': return 22;
+  //   case 'd': return 7;
+  //   case 'f': return 9;
+  //   case 'g': return 10;
+  //   case 'h': return 11;
+  //   case 'j': return 13;
+  //   case 'k': return 14;
+  //   case 'l': return 15;
+  //   case '#': return 40;
 
-    default: return 0;
-  }
+  //   //case '?': return 224; caps shift
+  //   case 'z': return 29;
+  //   case 'x': return 27;
+  //   case 'c': return 6;
+  //   case 'v': return 25;
+  //   case 'b': return 5;
+  //   case 'n': return 17;
+  //   case 'm': return 16;
+  //   //case ' ': return 225; symbol shift
+  //   case ' ': return 44;
+
+  //   default: return 0;
+  // }
 
   // int retval = getchar_timeout_us(0);
   // if (retval != -1) {

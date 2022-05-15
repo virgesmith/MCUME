@@ -3,3 +3,4 @@ pico-sdk*
 spectrum-roms*
 *.inl
 .vscode
+.venv*
